@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nodejs-app-monitor
+  labels:
+    release: prometheus
+  namespace: iacproject
+  
+spec:
+  selector:
+    matchLabels:
+      app: nodejs-app
+  namespaceSelector:
+    matchNames:
+      - iacproject
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
