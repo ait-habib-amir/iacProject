@@ -1,57 +1,55 @@
 name: Node.js CI/CD - Build & Push Docker Image
 
-# Déclenche le workflow à chaque 'push' sur la branche 'main' (ou 'master')
 on:
   push:
     branches:
-      - main # Changez à 'master' si c'est le nom de votre branche principale
+      - main  # ou master selon ta branche
 
 env:
   IMAGE_NAME: redis-node
   DOCKERFILE_PATH: Dev/redis-node/Dockerfile
   CONTEXT_PATH: Dev/redis-node
 
-
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Récupération du code
       - name: Checkout Code
         uses: actions/checkout@v4
-        
-      # 1. Installer Node.js et les dépendances (pour les tests)
+
+      # 2️⃣ Installer Node.js (pour les tests)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: ${{ env.CONTEXT_PATH }}/package-lock.json
 
-
-      # 2. Exécuter les tests unitaires (avant de construire l'image)
+      # 3️⃣ Exécuter les tests unitaires
       - name: Run Unit Tests
         run: npm test
-        working-directory: ./Dev/redis-node
+        working-directory: ${{ env.CONTEXT_PATH }}
 
-      # 3. Se connecter au Container Registry (par exemple, GitHub Packages)
+      # 4️⃣ Connexion au registre Docker (GitHub Container Registry)
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          # Utilise le jeton par défaut de GitHub Actions pour l'authentification
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Configurer les métadonnées (tags) pour l'image
-      - name: Extract metadata (tags) for Docker
+      # 5️⃣ Extraction des métadonnées
+      - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,prefix=,suffix=,enable=true,format=long # Utilise le SHA du commit
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=latest
 
-      # 5. Construire et pousser l'image Docker
+      # 6️⃣ Build et Push de l'image Docker
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
