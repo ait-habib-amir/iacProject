@@ -24,8 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: ${{ env.CONTEXT_PATH }}/package-lock.json
+
 
       # 3️⃣ Exécuter les tests unitaires
       - name: Run Unit Tests
