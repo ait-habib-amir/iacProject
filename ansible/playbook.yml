@@ -1,0 +1,28 @@
+---
+- name: Install DevOps tools (Docker, Minikube, Kubectl, Helm)
+  hosts: local
+  tasks:
+    - name: Ensure Homebrew is installed
+      homebrew:
+        name: git
+        state: present
+
+    - name: Install Docker
+      homebrew:
+        name: docker
+        state: present
+
+    - name: Install Minikube
+      homebrew:
+        name: minikube
+        state: present
+
+    - name: Install kubectl
+      homebrew:
+        name: kubectl
+        state: present
+
+    - name: Install Helm
+      homebrew:
+        name: helm
+        state: present
