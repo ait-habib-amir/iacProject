@@ -7,10 +7,10 @@ on:
       - main # Changez à 'master' si c'est le nom de votre branche principale
 
 env:
-  # Variables d'environnement pour le workflow
-  IMAGE_NAME: redis-node # Nom de l'image (doit correspondre à votre app)
-  DOCKERFILE_PATH: Dev/Dockerfile # Chemin vers votre Dockerfile
-  CONTEXT_PATH: Dev/redis-node/ # Chemin du contexte de build
+  IMAGE_NAME: redis-node
+  DOCKERFILE_PATH: Dev/redis-node/Dockerfile
+  CONTEXT_PATH: Dev/redis-node
+
 
 jobs:
   build_and_push:
