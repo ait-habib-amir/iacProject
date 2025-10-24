@@ -1,0 +1,64 @@
+name: CD - Deploy to Kubernetes
+
+on:
+  workflow_run:
+    workflows: ["Node.js CI/CD - Build & Push Docker Image"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes Cluster
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.29.0
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
+          echo "✅ Kubeconfig configuré avec succès"
+
+      - name: Verify cluster access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+          echo "✅ Cluster accessible"
+
+      - name: Deploy Redis Master
+        run: |
+          echo "🚀 Déploiement de Redis Master..."
+          kubectl apply -f Ops/Redis/redis-master.yaml
+          kubectl rollout status deployment/redis-master --timeout=120s || true
+
+      - name: Deploy Redis Slaves
+        run: |
+          echo "🚀 Déploiement de Redis Slaves..."
+          kubectl apply -f Ops/Redis/redis-slaves.yaml
+          kubectl rollout status deployment/redis-slave --timeout=120s || true
+
+      - name: Deploy Node.js App
+        run: |
+          echo "🚀 Déploiement de l'application Node.js..."
+          sed -i "s|ghcr.io/.*/redis-node:.*|ghcr.io/ait-habib-amir/redis-node:latest|g" Ops/NodeJsApp/nodeJsApp.yaml
+          kubectl apply -f Ops/NodeJsApp/nodeJsApp.yaml
+          kubectl rollout status deployment/nodejs-app --timeout=120s
+
+      - name: Deploy Horizontal Pod Autoscaler
+        run: |
+          echo "⚖️ Application du HPA (autoscaling)..."
+          kubectl apply -f Ops/NodeJsApp/hpa.yaml || echo "⚠️ HPA non trouvé, ignoré."
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Vérification finale..."
+          kubectl get pods -o wide
+          kubectl get svc -o wide
