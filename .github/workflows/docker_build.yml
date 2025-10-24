@@ -8,7 +8,7 @@ on:
 env:
   IMAGE_NAME: redis-node
   DOCKERFILE_PATH: Dev/Dockerfile
-  CONTEXT_PATH: Dev/redis-node
+  CONTEXT_PATH: Dev
 
 jobs:
   build_and_push:
