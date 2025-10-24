@@ -1,0 +1,63 @@
+name: Node.js CI/CD - Build & Push Docker Image
+
+# Déclenche le workflow à chaque 'push' sur la branche 'main' (ou 'master')
+on:
+  push:
+    branches:
+      - main # Changez à 'master' si c'est le nom de votre branche principale
+
+env:
+  # Variables d'environnement pour le workflow
+  IMAGE_NAME: redis-node # Nom de l'image (doit correspondre à votre app)
+  DOCKERFILE_PATH: Dev/Dockerfile # Chemin vers votre Dockerfile
+  CONTEXT_PATH: Dev/redis-node/ # Chemin du contexte de build
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      # 1. Installer Node.js et les dépendances (pour les tests)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: Dev/redis-node/package-lock.json
+
+      # 2. Exécuter les tests unitaires (avant de construire l'image)
+      - name: Run Unit Tests
+        run: npm test
+        working-directory: ./Dev/redis-node
+
+      # 3. Se connecter au Container Registry (par exemple, GitHub Packages)
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Utilise le jeton par défaut de GitHub Actions pour l'authentification
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Configurer les métadonnées (tags) pour l'image
+      - name: Extract metadata (tags) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=,suffix=,enable=true,format=long # Utilise le SHA du commit
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+      # 5. Construire et pousser l'image Docker
+      - name: Build and Push Docker Image
+        uses: docker/build-and-push-action@v5
+        with:
+          context: ${{ env.CONTEXT_PATH }}
+          file: ${{ env.DOCKERFILE_PATH }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

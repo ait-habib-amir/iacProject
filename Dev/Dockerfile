@@ -1,3 +1,4 @@
+# créé l'image docker pour l'app node.js
 FROM node:18-alpine
 
 WORKDIR /app

@@ -1,4 +1,5 @@
 #!/bin/bash
+#script pour télécharger des données redis de test
 
 num_requests=$1
 if [ -z "$num_requests" ]; then

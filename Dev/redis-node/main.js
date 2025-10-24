@@ -1,5 +1,5 @@
 import { createClient } from 'redis'
-import express from 'express'
+import express from 'express' // c'est un serveur express 
 import cors from 'cors'
 import { v4 } from 'uuid'
 import promMid from 'express-prometheus-middleware'

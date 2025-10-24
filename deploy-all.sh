@@ -14,3 +14,6 @@ helm install prometheus prometheus-community/kube-prometheus-stack
 kubectl apply -f Ops/NodeJsApp/
 kubectl apply -f Ops/Redis/
 kubectl apply -f Monitoring/
+# Applique les ServiceMonitor dans le namespace 'iacproject'
+kubectl apply -f Monitoring/nodeJsMonitor.yaml -n iacproject
+kubectl apply -f Monitoring/redisServiceMonitor.yaml -n iacproject
